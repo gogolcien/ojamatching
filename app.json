@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Ojamatching",
+    "slug": "ojamatching",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "ojamatching",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ojamatching.app"
+    },
+    "android": {
+      "package": "com.ojamatching.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#12151b",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2bb147ef-c821-4982-ae57-e6e58cfa9db3"
+      }
+    }
+  }
+}

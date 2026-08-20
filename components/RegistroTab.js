@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, FlatList, StyleSheet, Pressable, Alert, Modal } from "react-native";
-import { addPlayer, renamePlayer, updatePlayerDeck, togglePlayerEnabled, deletePlayer } from "../lib/repo";
+import { addPlayer, renamePlayer, updatePlayerDeck, togglePlayerEnabled, deletePlayer, addLateAutowin } from "../lib/repo";
 import { colors, spacing, radius } from "../lib/theme";
 import { Badge, Button } from "./ui";
 
@@ -23,7 +23,18 @@ export default function RegistroTab({ tournament, reload }) {
       return;
     }
     setError("");
-    await addPlayer(tournament.id, name, deck.trim() || null);
+    const newPlayerId = await addPlayer(tournament.id, name, deck.trim() || null);
+
+    // Si el torneo es suizo y ya hay una ronda pareada (en curso), el
+    // jugador nuevo no puede meterse a una mesa ajena: se le asigna un
+    // AUTOWIN extra en esa misma ronda, en vez de dejarlo sin jugar
+    // hasta la siguiente. Así, una ronda puede tener más de un
+    // AUTOWIN/AUTOLOSE si se registran varios jugadores tarde.
+    if (tournament.format !== "elimination" && tournament.rounds.length > 0 && tournament.status !== "finished") {
+      const currentRound = tournament.rounds[tournament.rounds.length - 1];
+      await addLateAutowin(currentRound.id, newPlayerId);
+    }
+
     setName("");
     setDeck("");
     reload();
@@ -85,7 +96,11 @@ export default function RegistroTab({ tournament, reload }) {
         </View>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {tournament.rounds.length > 0 ? (
-          <Text style={styles.hint}>El torneo ya inició: un jugador nuevo se agrega sin puntos previos.</Text>
+          <Text style={styles.hint}>
+            {tournament.format === "elimination"
+              ? "El torneo ya inició: un jugador nuevo se agrega sin puntos previos."
+              : "El torneo ya inició: un jugador nuevo entra sin puntos previos y recibe un AUTOWIN en la ronda en curso."}
+          </Text>
         ) : null}
       </View>
 

@@ -44,6 +44,11 @@ jobs:
       - name: Generar proyecto nativo (expo prebuild)
         run: npx expo prebuild --platform android
 
+      - name: Usar un keystore de debug fijo (evita conflicto de firma al reinstalar)
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
       - name: Dar permisos de ejecución a gradlew
         run: chmod +x android/gradlew
 

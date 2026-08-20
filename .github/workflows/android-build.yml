@@ -52,13 +52,9 @@ jobs:
       - name: Dar permisos de ejecución a gradlew
         run: chmod +x android/gradlew
 
-      - name: Compilar APK de debug
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
-
       - name: Compilar APK de release (JS empaquetado, no necesita Metro)
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
 
       - name: Subir el APK como artifact descargable
         uses: actions/upload-artifact@v4

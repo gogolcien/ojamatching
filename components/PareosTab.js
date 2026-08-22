@@ -189,6 +189,10 @@ export default function PareosTab({ tournament, reload }) {
             </Text>
           ) : null}
 
+          {round.matches.some((m) => m.playerBId == null) && editable ? (
+            <Text style={styles.hint}>Toca el badge AUTOWIN/AUTOLOSE para alternar entre los dos.</Text>
+          ) : null}
+
           {round.matches.map((m) => {
             const a = playerById(m.playerAId);
             const b = m.playerBId ? playerById(m.playerBId) : null;
@@ -202,7 +206,16 @@ export default function PareosTab({ tournament, reload }) {
                     {!b ? (
                       <View style={[styles.matchRow, { alignItems: "center" }]}>
                         <PlayerBox name={a?.name || "?"} pts={stats.points[m.playerAId]} op={stats.opPercent[m.playerAId]} tone="win" />
-                        <Badge text={m.result === "bye_loss" ? "AUTOLOSE" : "AUTOWIN"} tone={m.result === "bye_loss" ? "red" : "gold"} />
+                        {editable ? (
+                          <Pressable
+                            onPress={() => handleSetResult(m.id, m.result === "bye_loss" ? "bye_win" : "bye_loss")}
+                            hitSlop={6}
+                          >
+                            <Badge text={m.result === "bye_loss" ? "AUTOLOSE" : "AUTOWIN"} tone={m.result === "bye_loss" ? "red" : "gold"} />
+                          </Pressable>
+                        ) : (
+                          <Badge text={m.result === "bye_loss" ? "AUTOLOSE" : "AUTOWIN"} tone={m.result === "bye_loss" ? "red" : "gold"} />
+                        )}
                       </View>
                     ) : (
                       <View style={styles.matchRow}>

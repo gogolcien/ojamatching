@@ -5,6 +5,29 @@ import { setTournamentStatus } from "../lib/repo";
 import { colors, spacing, radius } from "../lib/theme";
 import { exportPdf, pdfBaseStyles, escapeHtml, formatTimeNow, randomDigits } from "../lib/pdf";
 
+const METRIC_INFO = {
+  ow: {
+    title: "OW% — Opponents Winrate",
+    message:
+      "Promedio del winrate de los rivales REALES que enfrentó este jugador. Las rondas de AUTOWIN/AUTOLOSE no cuentan (ni suman ni dividen), porque no hubo un rival real en esa ronda.",
+  },
+  oow: {
+    title: "OOW% — Opponents' Opponents Winrate",
+    message:
+      "Promedio del OW% de los rivales REALES que enfrentó este jugador. Mide, en promedio, qué tan fuerte fue el nivel de los rivales de sus propios rivales. Igual que OW%, omite las rondas de AUTOWIN/AUTOLOSE.",
+  },
+  sl: {
+    title: "SL — Square Loss",
+    message:
+      "Suma del cuadrado del número de ronda de cada derrota (por ejemplo, perder en ronda 1 y ronda 3 = 1² + 3² = 10). Se usa como criterio de desempate: perder en una ronda tardía pesa más que perder en una temprana, así que un SL más alto favorece a quien perdió, si perdió, en rondas más avanzadas.",
+  },
+};
+
+function showMetricInfo(key) {
+  const info = METRIC_INFO[key];
+  Alert.alert(info.title, info.message);
+}
+
 export default function StandingsTab({ tournament, reload }) {
   const rows = useMemo(() => computeStandings(tournament), [tournament]);
   const stats = useMemo(() => computeStats(tournament), [tournament]);
@@ -139,9 +162,15 @@ export default function StandingsTab({ tournament, reload }) {
         <Text style={[styles.headerCell, { width: 24 }]}>#</Text>
         <Text style={[styles.headerCell, { flex: 1 }]}>Jugador</Text>
         <Text style={[styles.headerCell, styles.colDivider, { width: 40, textAlign: "center" }]}>Pts</Text>
-        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OW%</Text>
-        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OOW%</Text>
-        <Text style={[styles.headerCell, styles.colDivider, { width: 40, textAlign: "center" }]}>SL</Text>
+        <Pressable onPress={() => showMetricInfo("ow")} hitSlop={4}>
+          <Text style={[styles.headerCell, styles.colDivider, styles.headerCellInfo, { width: 62, textAlign: "center", paddingRight: 6 }]}>OW% ⓘ</Text>
+        </Pressable>
+        <Pressable onPress={() => showMetricInfo("oow")} hitSlop={4}>
+          <Text style={[styles.headerCell, styles.colDivider, styles.headerCellInfo, { width: 62, textAlign: "center", paddingRight: 6 }]}>OOW% ⓘ</Text>
+        </Pressable>
+        <Pressable onPress={() => showMetricInfo("sl")} hitSlop={4}>
+          <Text style={[styles.headerCell, styles.colDivider, styles.headerCellInfo, { width: 40, textAlign: "center" }]}>SL ⓘ</Text>
+        </Pressable>
         <Text style={[styles.headerCell, { width: 30 }]}></Text>
       </View>
 
@@ -253,6 +282,7 @@ const styles = StyleSheet.create({
   copyBtnText: { color: colors.inkDim, fontSize: 11.5, fontWeight: "600" },
   headerRow: { flexDirection: "row", paddingHorizontal: spacing.lg, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line, marginBottom: 4 },
   headerCell: { color: colors.inkDim, fontSize: 10.5 },
+  headerCellInfo: { color: colors.gold },
   row: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
   cell: { color: colors.ink, fontSize: 12.5, fontFamily: "monospace" },
   colDivider: { borderLeftWidth: 1, borderLeftColor: colors.line, paddingLeft: 6 },

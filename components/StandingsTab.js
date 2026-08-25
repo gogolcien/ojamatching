@@ -47,8 +47,8 @@ export default function StandingsTab({ tournament, reload }) {
               <td style="width:22%;color:#666;font-size:10.5px;">${escapeHtml(estado)}</td>
               <td style="width:18%;color:#666;font-size:10.5px;">${r.deck ? escapeHtml(r.deck) : ""}</td>
               <td style="width:40px;text-align:center;font-weight:700;">${r.points}</td>
-              <td style="width:56px;text-align:center;">${(r.opPercent * 100).toFixed(2)}%</td>
-              <td style="width:56px;text-align:center;">${(r.oopPercent * 100).toFixed(2)}%</td>
+              <td style="width:56px;text-align:center;">${(r.owPercent * 100).toFixed(2)}%</td>
+              <td style="width:56px;text-align:center;">${(r.oowPercent * 100).toFixed(2)}%</td>
               <td style="width:40px;text-align:center;">${r.sl}</td>
             </tr>`;
         })
@@ -78,8 +78,8 @@ export default function StandingsTab({ tournament, reload }) {
                   <th>Estado</th>
                   <th>Deck</th>
                   <th style="text-align:center;">Pts</th>
-                  <th style="text-align:center;">OP%</th>
-                  <th style="text-align:center;">OOP%</th>
+                  <th style="text-align:center;">OW%</th>
+                  <th style="text-align:center;">OOW%</th>
                   <th style="text-align:center;">SL</th>
                 </tr>
               </thead>
@@ -139,8 +139,8 @@ export default function StandingsTab({ tournament, reload }) {
         <Text style={[styles.headerCell, { width: 24 }]}>#</Text>
         <Text style={[styles.headerCell, { flex: 1 }]}>Jugador</Text>
         <Text style={[styles.headerCell, styles.colDivider, { width: 40, textAlign: "center" }]}>Pts</Text>
-        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OP%</Text>
-        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OOP%</Text>
+        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OW%</Text>
+        <Text style={[styles.headerCell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>OOW%</Text>
         <Text style={[styles.headerCell, styles.colDivider, { width: 40, textAlign: "center" }]}>SL</Text>
         <Text style={[styles.headerCell, { width: 30 }]}></Text>
       </View>
@@ -160,8 +160,8 @@ export default function StandingsTab({ tournament, reload }) {
               {item.deck ? <Text style={styles.deck}>{item.deck}</Text> : null}
             </View>
             <Text style={[styles.cell, styles.colDivider, { width: 40, textAlign: "center", color: colors.teal, fontWeight: "700" }]}>{item.points}</Text>
-            <Text style={[styles.cell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>{(item.opPercent * 100).toFixed(2)}%</Text>
-            <Text style={[styles.cell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>{(item.oopPercent * 100).toFixed(2)}%</Text>
+            <Text style={[styles.cell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>{(item.owPercent * 100).toFixed(2)}%</Text>
+            <Text style={[styles.cell, styles.colDivider, { width: 62, textAlign: "center", paddingRight: 6 }]}>{(item.oowPercent * 100).toFixed(2)}%</Text>
             <Text style={[styles.cell, styles.colDivider, { width: 40, textAlign: "center" }]}>{item.sl}</Text>
             <Pressable
               onPress={() => setDetailPlayerId(item.id)}
@@ -213,7 +213,7 @@ export default function StandingsTab({ tournament, reload }) {
             </View>
             {opponentDetails.length ? (
               <Text style={styles.opponentSumHint}>
-                OP% = {(opponentWinrateSum * 100).toFixed(2)}% ÷ {opponentDetails.length} rival
+                OW% = {(opponentWinrateSum * 100).toFixed(2)}% ÷ {opponentDetails.length} rival
                 {opponentDetails.length === 1 ? "" : "es"} ={" "}
                 {((opponentWinrateSum / opponentDetails.length) * 100).toFixed(2)}%
               </Text>

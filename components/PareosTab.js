@@ -205,7 +205,7 @@ export default function PareosTab({ tournament, reload }) {
                   <View style={styles.cardContent}>
                     {!b ? (
                       <View style={[styles.matchRow, { alignItems: "center" }]}>
-                        <PlayerBox name={a?.name || "?"} pts={stats.points[m.playerAId]} op={stats.opPercent[m.playerAId]} tone="win" />
+                        <PlayerBox name={a?.name || "?"} pts={stats.points[m.playerAId]} op={stats.owPercent[m.playerAId]} tone="win" />
                         {editable ? (
                           <Pressable
                             onPress={() => handleSetResult(m.id, m.result === "bye_loss" ? "bye_win" : "bye_loss")}
@@ -223,7 +223,7 @@ export default function PareosTab({ tournament, reload }) {
                           <PlayerBox
                             name={a?.name || "?"}
                             pts={stats.points[m.playerAId]}
-                            op={stats.opPercent[m.playerAId]}
+                            op={stats.owPercent[m.playerAId]}
                             tone={m.result === "a_win" ? "win" : m.result === "double_loss" ? "loss" : m.result === "draw" ? "draw" : null}
                             onPress={editable ? () => handleSetResult(m.id, "a_win") : null}
                           />
@@ -236,7 +236,7 @@ export default function PareosTab({ tournament, reload }) {
                           <PlayerBox
                             name={b?.name || "?"}
                             pts={stats.points[m.playerBId]}
-                            op={stats.opPercent[m.playerBId]}
+                            op={stats.owPercent[m.playerBId]}
                             tone={m.result === "b_win" ? "win" : m.result === "double_loss" ? "loss" : m.result === "draw" ? "draw" : null}
                             onPress={editable ? () => handleSetResult(m.id, "b_win") : null}
                           />

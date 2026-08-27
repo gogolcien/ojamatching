@@ -199,7 +199,7 @@ export default function StandingsTab({ tournament, reload }) {
   async function handlePickTopCutSize(size) {
     setTopCutModalOpen(false);
     Alert.alert(
-      `Cortar a Top ${size}`,
+      `Corte a Top ${size}`,
       `Se va a crear un torneo nuevo de eliminación directa con los ${size} mejores jugadores actuales (sembrados 1 vs ${size}, 2 vs ${size - 1}, etc., para que los mejores puestos se enfrenten lo más tarde posible). Este torneo suizo no se modifica. ¿Continuar?`,
       [
         { text: "Cancelar", style: "cancel" },
@@ -248,7 +248,7 @@ export default function StandingsTab({ tournament, reload }) {
             style={styles.copyBtn}
             disabled={cuttingSize != null}
           >
-            <Text style={styles.copyBtnText}>{cuttingSize ? `Creando Top ${cuttingSize}…` : "Cortar a Top…"}</Text>
+            <Text style={styles.copyBtnText}>{cuttingSize ? `Creando Top ${cuttingSize}…` : "Corte a Top"}</Text>
           </Pressable>
         ) : null}
       </View>

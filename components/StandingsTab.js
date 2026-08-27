@@ -33,6 +33,23 @@ function showMetricInfo(key) {
   Alert.alert(info.title, info.message);
 }
 
+// Color del nombre del rival en el detalle "Rivales de": verde si el
+// jugador ganó esa ronda (incluye AUTOWIN), rojo si la perdió
+// (incluye AUTOLOSE y doble derrota), azul si fue empate.
+function outcomeColor(outcome) {
+  switch (outcome) {
+    case "win":
+      return colors.green;
+    case "draw":
+      return colors.blue;
+    case "loss":
+    case "double_loss":
+      return colors.red;
+    default:
+      return colors.ink;
+  }
+}
+
 export default function StandingsTab({ tournament, reload }) {
   const router = useRouter();
   const rows = useMemo(() => computeStandings(tournament), [tournament]);
@@ -48,16 +65,23 @@ export default function StandingsTab({ tournament, reload }) {
   const opponentDetails = useMemo(() => {
     if (!detailPlayerId) return [];
     return (stats.roundsByPlayer[detailPlayerId] || [])
-      .filter((r) => r.opponentId != null)
       .map((r) => ({
         roundNumber: r.roundNumber,
+        outcome: r.outcome, // 'win' | 'loss' | 'draw' | 'double_loss'
         opponentId: r.opponentId,
-        opponentName: playerById(r.opponentId)?.name || "?",
-        winrate: stats.record[r.opponentId] ?? 0,
+        // AUTOWIN/AUTOLOSE (opponentId null): no hay rival real.
+        opponentName:
+          r.opponentId != null
+            ? playerById(r.opponentId)?.name || "?"
+            : r.outcome === "win"
+            ? "AUTOWIN"
+            : "AUTOLOSE",
+        winrate: r.opponentId != null ? stats.record[r.opponentId] ?? 0 : null,
       }))
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }, [detailPlayerId, stats, tournament]);
-  const opponentWinrateSum = opponentDetails.reduce((s, o) => s + o.winrate, 0);
+  const realOpponentDetails = opponentDetails.filter((o) => o.opponentId != null);
+  const opponentWinrateSum = realOpponentDetails.reduce((s, o) => s + o.winrate, 0);
 
   async function handleStandingsPdf() {
     setGenerating(true);
@@ -319,13 +343,15 @@ export default function StandingsTab({ tournament, reload }) {
               data={opponentDetails}
               keyExtractor={(o, i) => `${o.roundNumber}-${o.opponentId}-${i}`}
               style={{ maxHeight: 280 }}
-              ListEmptyComponent={<Text style={styles.empty}>Este jugador todavía no tiene rivales registrados.</Text>}
+              ListEmptyComponent={<Text style={styles.empty}>Este jugador todavía no tiene rondas registradas.</Text>}
               renderItem={({ item }) => (
                 <View style={styles.opponentRow}>
                   <Text style={[styles.opponentCell, { width: 56 }]}>Ronda {item.roundNumber}</Text>
-                  <Text style={[styles.opponentCell, { flex: 1, fontWeight: "600" }]}>{item.opponentName}</Text>
-                  <Text style={[styles.opponentCell, { width: 64, textAlign: "right", color: colors.gold }]}>
-                    {(item.winrate * 100).toFixed(2)}%
+                  <Text style={[styles.opponentCell, { flex: 1, fontWeight: "600", color: outcomeColor(item.outcome) }]}>
+                    {item.opponentName}
+                  </Text>
+                  <Text style={[styles.opponentCell, { width: 64, textAlign: "right", color: item.winrate == null ? colors.inkDim : colors.gold }]}>
+                    {item.winrate == null ? "—" : `${(item.winrate * 100).toFixed(2)}%`}
                   </Text>
                 </View>
               )}
@@ -335,11 +361,11 @@ export default function StandingsTab({ tournament, reload }) {
               <Text style={styles.opponentSumLabel}>Suma de winrates</Text>
               <Text style={styles.opponentSumValue}>{(opponentWinrateSum * 100).toFixed(2)}%</Text>
             </View>
-            {opponentDetails.length ? (
+            {realOpponentDetails.length ? (
               <Text style={styles.opponentSumHint}>
-                OW% = {(opponentWinrateSum * 100).toFixed(2)}% ÷ {opponentDetails.length} rival
-                {opponentDetails.length === 1 ? "" : "es"} ={" "}
-                {((opponentWinrateSum / opponentDetails.length) * 100).toFixed(2)}%
+                OW% = {(opponentWinrateSum * 100).toFixed(2)}% ÷ {realOpponentDetails.length} rival
+                {realOpponentDetails.length === 1 ? "" : "es"} ={" "}
+                {((opponentWinrateSum / realOpponentDetails.length) * 100).toFixed(2)}%
               </Text>
             ) : null}
 

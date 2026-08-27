@@ -11,7 +11,7 @@ import { Button } from "./ui";
 // pareo ni duplicado.
 export default function ManualPairingEditor({ round, playerById, onSave, onCancel }) {
   const [pairs, setPairs] = useState(
-    round.matches.map((m) => ({ tableNum: m.tableNum, slotIndex: m.slotIndex, aId: m.playerAId, bId: m.playerBId }))
+    round.matches.map((m) => ({ tableNum: m.tableNum, slotIndex: m.slotIndex, aId: m.playerAId, bId: m.playerBId, isThirdPlace: !!m.isThirdPlace }))
   );
   const [picker, setPicker] = useState(null); // { pairIdx, side } | null
 

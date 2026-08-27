@@ -1,9 +1,14 @@
 import { useMemo, useState } from "react";
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, Modal } from "react-native";
+import { useRouter } from "expo-router";
 import { computeStandings, computeStats, isRoundFullyResolved } from "../lib/swiss";
-import { setTournamentStatus } from "../lib/repo";
+import { setTournamentStatus, createTopCutTournament } from "../lib/repo";
 import { colors, spacing, radius } from "../lib/theme";
 import { exportPdf, pdfBaseStyles, escapeHtml, formatTimeNow, randomDigits } from "../lib/pdf";
+
+// Tamaños de Top Cut disponibles (deben ser potencia de 2, para que
+// el algoritmo de siembra por bracket funcione sin byes).
+const TOP_CUT_SIZES = [4, 8, 16, 32, 64];
 
 const METRIC_INFO = {
   ow: {
@@ -29,9 +34,12 @@ function showMetricInfo(key) {
 }
 
 export default function StandingsTab({ tournament, reload }) {
+  const router = useRouter();
   const rows = useMemo(() => computeStandings(tournament), [tournament]);
   const stats = useMemo(() => computeStats(tournament), [tournament]);
   const [generating, setGenerating] = useState(false);
+  const [cuttingSize, setCuttingSize] = useState(null);
+  const [topCutModalOpen, setTopCutModalOpen] = useState(false);
   const [detailPlayerId, setDetailPlayerId] = useState(null);
   const finished = tournament.status === "finished";
   const playerById = (id) => tournament.players.find((p) => p.id === id);
@@ -141,6 +149,60 @@ export default function StandingsTab({ tournament, reload }) {
     setTournamentStatus(tournament.id, "ongoing").then(reload);
   }
 
+  const eligibleForCut = rows.filter((r) => r.enabled);
+  const availableCutSizes = TOP_CUT_SIZES.filter((size) => size <= eligibleForCut.length);
+
+  // El botón de Top Cut solo debe aparecer una vez que la ronda en
+  // curso ya tiene todos sus resultados capturados (o si todavía no
+  // se ha generado ninguna ronda, no aplica el corte).
+  const lastRound = tournament.rounds.length ? tournament.rounds[tournament.rounds.length - 1] : null;
+  const currentRoundResolved = !!lastRound && isRoundFullyResolved(lastRound);
+
+  // Recomendación de tamaño según cantidad de jugadores activos. Para
+  // 9-32 jugadores sigue la tabla oficial de Konami (Top 4); de ahí en
+  // adelante es una extrapolación propia, no un número oficial de KTS.
+  function recommendedCutSize(n) {
+    if (n < 9) return null;
+    if (n <= 32) return 4;
+    if (n <= 128) return 8;
+    if (n <= 512) return 16;
+    if (n <= 2048) return 32;
+    return 64;
+  }
+  const recommendedSize = recommendedCutSize(eligibleForCut.length);
+  const recommendedAvailable = recommendedSize != null && availableCutSizes.includes(recommendedSize);
+
+  async function handlePickTopCutSize(size) {
+    setTopCutModalOpen(false);
+    Alert.alert(
+      `Cortar a Top ${size}`,
+      `Se va a crear un torneo nuevo de eliminación directa con los ${size} mejores jugadores actuales (sembrados 1 vs ${size}, 2 vs ${size - 1}, etc., para que los mejores puestos se enfrenten lo más tarde posible). Este torneo suizo no se modifica. ¿Continuar?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Crear Top Cut",
+          onPress: async () => {
+            setCuttingSize(size);
+            try {
+              const topPlayers = eligibleForCut.slice(0, size).map((r) => ({ name: r.name, deck: r.deck }));
+              const newId = await createTopCutTournament({
+                sourceTournamentId: tournament.id,
+                name: `${tournament.name} - Top ${size}`,
+                date: tournament.date,
+                orderedTopPlayers: topPlayers,
+              });
+              router.push(`/tournament/${newId}`);
+            } catch (e) {
+              Alert.alert("No se pudo crear el Top Cut", "Intenta de nuevo.");
+            } finally {
+              setCuttingSize(null);
+            }
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.topRow}>
@@ -156,7 +218,40 @@ export default function StandingsTab({ tournament, reload }) {
         <Pressable onPress={handleStandingsPdf} style={styles.copyBtn} disabled={generating}>
           <Text style={styles.copyBtnText}>{generating ? "Generando…" : "Standings PDF"}</Text>
         </Pressable>
+        {tournament.format !== "elimination" && availableCutSizes.length > 0 && currentRoundResolved ? (
+          <Pressable
+            onPress={() => setTopCutModalOpen(true)}
+            style={styles.copyBtn}
+            disabled={cuttingSize != null}
+          >
+            <Text style={styles.copyBtnText}>{cuttingSize ? `Creando Top ${cuttingSize}…` : "Cortar a Top…"}</Text>
+          </Pressable>
+        ) : null}
       </View>
+
+      <Modal visible={topCutModalOpen} transparent animationType="fade" onRequestClose={() => setTopCutModalOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setTopCutModalOpen(false)}>
+          <View style={styles.modalBox}>
+            <Text style={styles.addLabel}>Elegir tamaño del Top Cut</Text>
+            {recommendedAvailable ? (
+              <Text style={[styles.addLabel, { color: colors.gold, marginBottom: 10 }]}>
+                Para {eligibleForCut.length} jugadores, lo ideal es Top {recommendedSize}.
+              </Text>
+            ) : null}
+            {availableCutSizes.map((size) => (
+              <Pressable key={size} style={styles.roundOptionRow} onPress={() => handlePickTopCutSize(size)}>
+                <Text style={styles.roundOptionText}>
+                  Top {size}
+                  {size === recommendedSize ? " ⭐" : ""}
+                </Text>
+                <Text style={styles.roundOptionMeta}>
+                  {size === 4 ? "Semifinal + 3er lugar" : `${Math.log2(size)} rondas de bracket`}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
       <View style={styles.headerRow}>
         <Text style={[styles.headerCell, { width: 24 }]}>#</Text>
@@ -301,6 +396,10 @@ const styles = StyleSheet.create({
   slInfoBtnText: { color: colors.gold, fontSize: 10, fontWeight: "700" },
   modalBackdrop: { flex: 1, backgroundColor: "#000000aa", alignItems: "center", justifyContent: "center", padding: spacing.lg },
   modalBox: { width: "100%", maxHeight: "80%", backgroundColor: colors.panel, borderColor: colors.line, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg },
+  addLabel: { color: colors.inkDim, fontSize: 11.5, marginBottom: 8 },
+  roundOptionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.line },
+  roundOptionText: { color: colors.ink, fontSize: 13.5, fontWeight: "500" },
+  roundOptionMeta: { color: colors.inkDim, fontSize: 11 },
   modalTitle: { color: colors.ink, fontSize: 15, fontWeight: "700", marginBottom: 2 },
   modalSubtitle: { color: colors.inkDim, fontSize: 11, marginBottom: 10 },
   opponentHeaderRow: { flexDirection: "row", paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: colors.line, marginBottom: 4 },

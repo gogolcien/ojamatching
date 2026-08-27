@@ -19,19 +19,21 @@ export default function BracketTab({ tournament, reload }) {
 
   const roundDone = round && isRoundComplete(round.matches);
 
-  // La ronda final es la única mesa que queda: en cuanto se captura su
-  // resultado ya sabemos el campeón, sin necesitar una ronda extra.
+  // La ronda final puede traer 1 mesa (la Final) o 2 (Final + partido
+  // por 3er lugar, cuando el Top Cut viene de una semifinal). La mesa
+  // de Final es siempre la que NO está marcada como 3er lugar.
+  const finalMatch = round && round.matches.length <= 2 ? round.matches.find((m) => !m.isThirdPlace) : null;
+  const isFinalRound = isLastRound && !!finalMatch && (round.matches.length === 1 || round.matches.some((m) => m.isThirdPlace));
+
   let championId = null;
-  if (isLastRound && roundDone && round.matches.length === 1) {
-    const finalMatch = round.matches[0];
+  if (isFinalRound && finalMatch.result) {
     if (finalMatch.playerBId == null) championId = finalMatch.playerAId;
     else if (finalMatch.result === "a_win") championId = finalMatch.playerAId;
     else if (finalMatch.result === "b_win") championId = finalMatch.playerBId;
     // 'double_loss' en la final: ambos quedan eliminados, no hay campeón.
   }
   const champion = championId ? playerById(championId) : null;
-  const doubleFinalLoss =
-    isLastRound && roundDone && round.matches.length === 1 && round.matches[0].result === "double_loss";
+  const doubleFinalLoss = isFinalRound && finalMatch.result === "double_loss";
 
   async function handleStart() {
     const pairs = generateFirstRound(tournament.players.filter((p) => p.enabled));
@@ -102,10 +104,10 @@ export default function BracketTab({ tournament, reload }) {
           {isLastRound && !hasResults && !champion && !doubleFinalLoss && !finished ? (
             <Button title="Pareos manuales" variant="ghost" small onPress={() => setManualEditing(true)} />
           ) : null}
-          {isLastRound && !roundDone ? (
+          {isLastRound && !roundDone && !(isFinalRound && finalMatch.result) ? (
             <Button title="Captura los resultados para continuar" onPress={() => {}} disabled small />
           ) : null}
-          {isLastRound && roundDone && round.matches.length > 1 && !finished ? (
+          {isLastRound && roundDone && round.matches.length > 1 && !isFinalRound && !finished ? (
             <Button title="Avanzar a la siguiente ronda" onPress={handleNextRound} small />
           ) : null}
           {(champion || doubleFinalLoss) && !finished ? (
@@ -141,9 +143,14 @@ export default function BracketTab({ tournament, reload }) {
           const a = playerById(m.playerAId);
           const b = m.playerBId ? playerById(m.playerBId) : null;
           const canPick = editable;
+          const mesaLabel = m.isThirdPlace
+            ? "🥉 Partido por el 3er lugar"
+            : isFinalRound
+            ? "🏆 Final"
+            : `Mesa ${m.tableNum}`;
           return (
             <View key={m.id} style={styles.card}>
-              <Text style={styles.tableNum}>Mesa {m.tableNum}</Text>
+              <Text style={styles.tableNum}>{mesaLabel}</Text>
               {!b ? (
                 <View style={[styles.matchRow, { alignItems: "center" }]}>
                   <PlayerBox name={a?.name || "?"} tone="win" />

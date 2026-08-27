@@ -4,6 +4,21 @@ import * as Clipboard from "expo-clipboard";
 import { computeEliminationStandings } from "../lib/bracket";
 import { colors, spacing, radius } from "../lib/theme";
 
+function podiumLabel(item) {
+  switch (item.podium) {
+    case 1:
+      return "Campeón";
+    case 2:
+      return "Subcampeón";
+    case 3:
+      return "3er lugar";
+    case 4:
+      return "4to lugar";
+    default:
+      return null;
+  }
+}
+
 export default function EliminationStandingsTab({ tournament }) {
   const rows = useMemo(
     () => computeEliminationStandings(tournament.players, tournament.rounds),
@@ -41,8 +56,8 @@ export default function EliminationStandingsTab({ tournament }) {
               {item.rank}
             </Text>
             <Text style={[styles.cell, { flex: 1, fontWeight: "600" }]}>{item.name}</Text>
-            <Text style={[styles.cell, { width: 100, textAlign: "right", color: item.eliminatedInRound == null ? colors.teal : colors.inkDim }]}>
-              {item.eliminatedInRound == null ? "En pie" : `Eliminado R${item.eliminatedInRound}`}
+            <Text style={[styles.cell, { width: 100, textAlign: "right", color: item.podium != null || item.eliminatedInRound == null ? colors.teal : colors.inkDim }]}>
+              {podiumLabel(item) ?? (item.eliminatedInRound == null ? "En pie" : `Eliminado R${item.eliminatedInRound}`)}
             </Text>
           </View>
         )}

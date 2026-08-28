@@ -99,12 +99,12 @@ export default function StandingsTab({ tournament, reload }) {
             <tr>
               <td style="width:32px;font-weight:700;">${r.rank}</td>
               <td style="width:26%;">${escapeHtml(r.name)}</td>
-              <td style="width:22%;color:#666;font-size:10.5px;">${escapeHtml(estado)}</td>
-              <td style="width:18%;color:#666;font-size:10.5px;">${r.deck ? escapeHtml(r.deck) : ""}</td>
               <td style="width:40px;text-align:center;font-weight:700;">${r.points}</td>
               <td style="width:56px;text-align:center;">${(r.owPercent * 100).toFixed(2)}%</td>
               <td style="width:56px;text-align:center;">${(r.oowPercent * 100).toFixed(2)}%</td>
               <td style="width:40px;text-align:center;">${r.sl}</td>
+              <td style="width:22%;color:#666;font-size:10.5px;">${escapeHtml(estado)}</td>
+              <td style="width:18%;color:#666;font-size:10.5px;">${r.deck ? escapeHtml(r.deck) : ""}</td>
             </tr>`;
         })
         .join("");
@@ -130,12 +130,12 @@ export default function StandingsTab({ tournament, reload }) {
                 <tr>
                   <th>#</th>
                   <th>Jugador</th>
-                  <th>Estado</th>
-                  <th>Deck</th>
                   <th style="text-align:center;">Pts</th>
                   <th style="text-align:center;">OW%</th>
                   <th style="text-align:center;">OOW%</th>
                   <th style="text-align:center;">SL</th>
+                  <th>Estado</th>
+                  <th>Deck</th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
